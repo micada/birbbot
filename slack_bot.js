@@ -53,14 +53,14 @@ function startBot() {
           inclusive: 1
         }, function(err, response) {
           reactionCollection.set({
-            id: response.latest,
+            id: response.latest.split('.').join(''),
             text: response.messages[0].text,
             user: response.messages[0].user,
             reactions
           });
         });
       } else {
-        reactionCollection.child('/reaction/' + event.reaction).transaction(function(emoji) {
+        reactionCollection.child('/reactions/' + event.reaction).transaction(function(emoji) {
           if (emoji) {
             if (emoji.reactors && emoji.reactors[event.user]) {
               emoji.score--;
@@ -84,12 +84,18 @@ function startBot() {
   botkitController.hears('report',['direct_mention','mention'], function(bot, message) {
     collection.once('value', function(snapshot) {
       var emojiVotes = new Array();
+      var emojiReact = new Array();
       for (var val in snapshot.val()) {
         emojiVotes.push(snapshot.val()[val]);
       }
-      emojiVotes.sort(function(a,b) {return (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0);} );
-      var topEmoji = emojiVotes[0];
-      bot.reply(message,'The top ' + topEmoji.key + '\'d message today so far is ' + topEmoji.text + ' by ' + '<@' + topEmoji.user+ '>!')
+      emojiVotes.forEach(function(elem, i, arr) {
+        emojiReact.push(elem.reactions);
+      });
+      bot.reply(message, emojiVotes);
+      bot.reply(message, emojiReact);
+      // emojiVotes.sort(function(a,b) {return (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0);} );
+      // var topEmoji = emojiVotes[0];
+      // bot.reply(message,'The top ' + topEmoji.key + '\'d message today so far is ' + topEmoji.text + ' by ' + '<@' + topEmoji.user+ '>!')
     });
   });
 }
