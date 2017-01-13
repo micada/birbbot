@@ -51,7 +51,6 @@ function startBot() {
             count: 1,
             inclusive: 1
           }, function(err, response) {
-            bot.botkit.log('WHY\n\n\n\n', response);
             birbCollection.set({
               id: response.latest,
               text: response.messages[0].text,
