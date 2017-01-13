@@ -85,11 +85,11 @@ function startBot() {
     collection.once('value', function(snapshot) {
       var emojiVotes = new Array();
       for (var val in snapshot.val()) {
-        birbVotes.push(snapshot.val()[val]);
+        emojiVotes.push(snapshot.val()[val]);
       }
-      birbVotes.sort(function(a,b) {return b.birbScore - a.birbScore} );
-      var topBirb = birbVotes[0];
-      bot.reply(message,'The top Birbed message today so far is ' + topBirb.text + ' by ' + '<@' + topBirb.user+ '>!')
+      emojiVotes.sort(function(a,b) {return (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0);} );
+      var topEmoji = emojiVotes[0];
+      bot.reply(message,'The top ' + topEmoji.key + '\'d message today so far is ' + topEmoji.text + ' by ' + '<@' + topEmoji.user+ '>!')
     });
   });
 }
