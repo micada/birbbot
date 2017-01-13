@@ -68,7 +68,7 @@ function startBot() {
               birb.birbScore--;
               birb.birbs[event.user] = null;
             } else {
-              birb.birbScore++;
+              (birb.birbScore===0) ? birb.birbScore = 1 : birb.birbScore++;
               if (!birb.birbs) {
                 birb.birbs = {};
               }
@@ -80,6 +80,18 @@ function startBot() {
 
       });
     }
+  });
+
+  botkitController.hears('report',['direct_mention','mention'], function(bot, message) {
+    collection.once('value', function(snapshot) {
+      var birbVotes = new Array();
+      for (var val in snapshot.val()) {
+        birbVotes.push(snapshot.val()[val]);
+      }
+      birbVotes.sort(function(a,b) {return b.birbScore - a.birbScore} );
+      var topBirb = birbVotes[0];
+      bot.reply(message,'The top Birbed message today so far is ' + topBirb.text + ' by ' + '<@' + topBirb.user+ '>!')
+    });
   });
 }
 
