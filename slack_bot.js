@@ -17,7 +17,7 @@ var config = {
 
 firebase.initializeApp(config);
 
-var collection = firebase.database().ref(today);
+var collection = firebase.database().ref(today + 'emoji');
 
 function connectToDb() {
   startBot(collection);
@@ -37,53 +37,53 @@ function startBot() {
   botkitController.on(['reaction_added', 'reaction_removed'], function(bot, event) {
     const stamp = event.item.ts.split('.').join('');
 
-    if (event.reaction==='birb') {
-      const birbCollection = collection.child(stamp);
-      const birbGiver = {};
-      birbGiver[event.user] = true;
+    const reactionCollection = collection.child(stamp);
+    const reactors = {};
+    reactors[event.user] = true;
+    const reactions = {};
+    reactions[event.reaction] = {score: 1, reactors}
 
-      birbCollection.once('value', function(snapshot) {
+    reactionCollection.once('value', function(snapshot) {
 
-        if (snapshot.val() === null ) {
-          bot.api.channels.history({
-            channel: event.item.channel,
-            latest: event.item.ts,
-            count: 1,
-            inclusive: 1
-          }, function(err, response) {
-            birbCollection.set({
-              id: response.latest,
-              text: response.messages[0].text,
-              user: response.messages[0].user,
-              birbScore: 1,
-              birbs: birbGiver
-            });
+      if (snapshot.val() === null ) {
+        bot.api.channels.history({
+          channel: event.item.channel,
+          latest: event.item.ts,
+          count: 1,
+          inclusive: 1
+        }, function(err, response) {
+          reactionCollection.set({
+            id: response.latest,
+            text: response.messages[0].text,
+            user: response.messages[0].user,
+            reactions
           });
-        }
-
-        birbCollection.transaction(function(birb) {
-          if (birb) {
-            if (birb.birbs && birb.birbs[event.user]) {
-              birb.birbScore--;
-              birb.birbs[event.user] = null;
-            } else {
-              (birb.birbScore===0) ? birb.birbScore = 1 : birb.birbScore++;
-              if (!birb.birbs) {
-                birb.birbs = {};
-              }
-              birb.birbs[event.user] = true;
-            }
-          }
-          return birb;
         });
-
-      });
-    }
+      } else {
+        reactionCollection.child('/reaction/' + event.reaction).transaction(function(emoji) {
+          if (emoji) {
+            if (emoji.reactors && emoji.reactors[event.user]) {
+              emoji.score--;
+              emoji.reactors[event.user] = null;
+            } else {
+              (emoji.score===0) ? emoji.score = 1 : emoji.score++;
+              if (!emoji.reactors) {
+                emoji.reactors = {};
+              }
+              emoji.reactors[event.user] = true;
+            }
+          } else {
+            emoji = {score: 1, reactors};
+          }
+          return emoji;
+        });
+      }
+    });
   });
 
   botkitController.hears('report',['direct_mention','mention'], function(bot, message) {
     collection.once('value', function(snapshot) {
-      var birbVotes = new Array();
+      var emojiVotes = new Array();
       for (var val in snapshot.val()) {
         birbVotes.push(snapshot.val()[val]);
       }
