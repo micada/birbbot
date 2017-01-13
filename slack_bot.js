@@ -25,8 +25,6 @@ function connectToDb() {
 
 function startBot() {
 
-  // collection.remove();
-
   var botkitController = botkit.slackbot({
     debug: true
   });
@@ -36,13 +34,13 @@ function startBot() {
   }).startRTM();
 
 
-  botkitController.on('reaction_added', function(bot, event) {
-    bot.botkit.log('TOP\n\n\n\n', event.user);
+  botkitController.on(['reaction_added', 'reaction_removed'], function(bot, event) {
     const stamp = event.item.ts.split('.').join('');
 
-    if (event.reaction==='heart') {
+    if (event.reaction==='birb') {
       const birbCollection = collection.child(stamp);
-      const birbGiver = event.user;
+      const birbGiver = {};
+      birbGiver[event.user] = true;
 
       birbCollection.once('value', function(snapshot) {
 
@@ -54,14 +52,12 @@ function startBot() {
             inclusive: 1
           }, function(err, response) {
             bot.botkit.log('WHY\n\n\n\n', response);
-            birbCollection.update({
+            birbCollection.set({
               id: response.latest,
               text: response.messages[0].text,
               user: response.messages[0].user,
               birbScore: 1,
-              birbs: [
-                {event.user : true}
-              ]
+              birbs: birbGiver
             });
           });
         }
@@ -82,30 +78,6 @@ function startBot() {
           return birb;
         });
 
-      });
-    }
-  });
-
-  botkitController.on('reaction_removed', function(bot, event) {
-    bot.botkit.log('TOP\n\n\n\n', event.user);
-    var stamp = event.item.ts.split('.').join('');
-
-    if (event.reaction==='heart') {
-      var birbCollection = collection.child(stamp);
-
-      birbCollection.once('value', function(snapshot) {
-
-        bot.botkit.log('SNAP\n\n\n\n\n\n\nSHOT\n\n\n\n+++++++++++++++', snapshot.val().birbs);
-        var birbGivers = snapshot.val().birbs.indexOf(event.user);
-        if (birbGivers > -1) {
-          birbCollection.child("/score").transaction(function(score) {
-            score = score - 1;
-            return score;
-          });
-          birbCollection.update({
-            birbs: snapshot.val().birbs.splice(birbGivers, 1)
-          });
-        }
       });
     }
   });
