@@ -41,7 +41,7 @@ function startBot() {
     const reactors = {};
     reactors[event.user] = true;
     const reactions = {};
-    reactions[event.reaction] = {score: 1, reactors}
+    reactions[event.reaction] = {id: event.reaction, score: 1, reactors}
 
     reactionCollection.once('value', function(snapshot) {
 
@@ -73,7 +73,7 @@ function startBot() {
               emoji.reactors[event.user] = true;
             }
           } else {
-            emoji = {score: 1, reactors};
+            emoji = {id: event.reaction, score: 1, reactors};
           }
           return emoji;
         });
@@ -85,17 +85,58 @@ function startBot() {
     collection.once('value', function(snapshot) {
       var emojiVotes = new Array();
       var emojiReact = new Array();
+
       for (var val in snapshot.val()) {
         emojiVotes.push(snapshot.val()[val]);
       }
       emojiVotes.forEach(function(elem, i, arr) {
-        emojiReact.push(elem.reactions);
+        // bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + elem);
+        // elem.reactions.forEach(function(elem, i, arr) {
+          for (var key in elem.reactions) {
+            if (Object.prototype.hasOwnProperty.call(elem.reactions, key)) {
+              var val = elem.reactions[key];
+              // bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + key + val.score);
+              emojiReact.push({name : key, score : val.score});
+            }
+          }
+        // Object.keys(elem.reactions).forEach(function(elem, i, arr) {
+        // });
+        });
+      // });
+
+      var emojiResults = Array.from(new Set(emojiReact));
+
+      bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + emojiReact);
+
+      bot.startConversation(message, function(err, convo) {
+        convo.say('Happy to report!');
+        convo.say('The emojis used today were: *' + emojiResults.join('*, *') + "*.");
+        convo.ask('Which emoji would you like a top report on?', function(response, convo) {
+          convo.say(response.text);
+          convo.next();
+        }
+        //   [
+        //   {
+        //     pattern: bot.utterances.yes,
+        //     callback: function(response, convo) {
+        //       convo.say('Bye!');
+        //       convo.next();
+        //       setTimeout(function() {
+        //         process.exit();
+        //       },3000);
+        //     }
+        //   },
+        //   {
+        //     pattern: bot.utterances.no,
+        //     default: true,
+        //     callback: function(response, convo) {
+        //       convo.say('*Phew!*');
+        //       convo.next();
+        //     }
+        //   }
+        // ]
+        );
       });
-      bot.reply(message, emojiVotes);
-      bot.reply(message, emojiReact);
-      // emojiVotes.sort(function(a,b) {return (a.score > b.score) ? 1 : ((b.score > a.score) ? -1 : 0);} );
-      // var topEmoji = emojiVotes[0];
-      // bot.reply(message,'The top ' + topEmoji.key + '\'d message today so far is ' + topEmoji.text + ' by ' + '<@' + topEmoji.user+ '>!')
     });
   });
 }
