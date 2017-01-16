@@ -41,7 +41,7 @@ function startBot() {
     const reactors = {};
     reactors[event.user] = true;
     const reactions = {};
-    reactions[event.reaction] = {id: event.reaction, score: 1, reactors}
+    reactions[event.reaction] = {score: 1, reactors}
 
     reactionCollection.once('value', function(snapshot) {
 
@@ -73,7 +73,7 @@ function startBot() {
               emoji.reactors[event.user] = true;
             }
           } else {
-            emoji = {id: event.reaction, score: 1, reactors};
+            emoji = {score: 1, reactors};
           }
           return emoji;
         });
@@ -84,7 +84,7 @@ function startBot() {
   botkitController.hears('report',['direct_mention','mention'], function(bot, message) {
     collection.once('value', function(snapshot) {
       var emojiVotes = new Array();
-      var emojiReact = new Array();
+      var emojiReact = new Map();
 
       for (var val in snapshot.val()) {
         emojiVotes.push(snapshot.val()[val]);
@@ -96,7 +96,7 @@ function startBot() {
             if (Object.prototype.hasOwnProperty.call(elem.reactions, key)) {
               var val = elem.reactions[key];
               // bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + key + val.score);
-              emojiReact.push({name : key, score : val.score});
+              emojiReact.set(key, val.score);
             }
           }
         // Object.keys(elem.reactions).forEach(function(elem, i, arr) {
@@ -104,13 +104,13 @@ function startBot() {
         });
       // });
 
-      var emojiResults = Array.from(new Set(emojiReact));
+      var emojiResults = Array.from(new Set(emojiReact.keys()));
 
       bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + emojiReact);
 
       bot.startConversation(message, function(err, convo) {
         convo.say('Happy to report!');
-        convo.say('The emojis used today were: *' + emojiResults.join('*, *') + "*.");
+        convo.say('The emojis used today were: *' + emojiResults.toString().replace(/([,]\d|[,])/gi, '*, *') + "*.");
         convo.ask('Which emoji would you like a top report on?', function(response, convo) {
           convo.say(response.text);
           convo.next();
