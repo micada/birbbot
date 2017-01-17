@@ -127,7 +127,6 @@ function startBot() {
             convo.repeat();
             convo.next();
           } else {
-            var score, messageText, messageUser;
             var messages = new Array;
             emojiVotes.forEach(function(elem, i, arr) {
               for (var key in elem.reactions) {
@@ -142,28 +141,7 @@ function startBot() {
             convo.say('The top ' + request + '\'d message today was: ' + messages[0][0].text + ' by <@' + messages[0][0].user + '>.');
           }
           convo.next();
-        }
-        //   [
-        //   {
-        //     pattern: bot.utterances.yes,
-        //     callback: function(response, convo) {
-        //       convo.say('Bye!');
-        //       convo.next();
-        //       setTimeout(function() {
-        //         process.exit();
-        //       },3000);
-        //     }
-        //   },
-        //   {
-        //     pattern: bot.utterances.no,
-        //     default: true,
-        //     callback: function(response, convo) {
-        //       convo.say('*Phew!*');
-        //       convo.next();
-        //     }
-        //   }
-        // ]
-        );
+        });
       });
     });
   });
