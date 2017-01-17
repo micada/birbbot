@@ -1,9 +1,7 @@
 'use strict';
 
 var firebase = require("firebase");
-var async = require('async');
 var moment = require('moment-timezone');
-var escapeStringRegexp = require('escape-string-regexp');
 var botkit = require('botkit');
 require('dotenv').config();
 
