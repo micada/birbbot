@@ -90,29 +90,57 @@ function startBot() {
         emojiVotes.push(snapshot.val()[val]);
       }
       emojiVotes.forEach(function(elem, i, arr) {
-        // bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + elem);
-        // elem.reactions.forEach(function(elem, i, arr) {
-          for (var key in elem.reactions) {
-            if (Object.prototype.hasOwnProperty.call(elem.reactions, key)) {
-              var val = elem.reactions[key];
-              // bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + key + val.score);
-              emojiReact.set(key, val.score);
-            }
+        for (var key in elem.reactions) {
+          if (Object.prototype.hasOwnProperty.call(elem.reactions, key)) {
+            emojiReact.has(key) ? emojiReact.set(key, emojiReact.get(key) + elem.reactions[key].score) : emojiReact.set(key, elem.reactions[key].score);
           }
-        // Object.keys(elem.reactions).forEach(function(elem, i, arr) {
-        // });
-        });
-      // });
+        }
+      });
 
-      var emojiResults = Array.from(new Set(emojiReact.keys()));
-
-      bot.reply(message, "HELLOOOOOO \n\n\n OOOOOOOOO" + emojiReact);
 
       bot.startConversation(message, function(err, convo) {
+
         convo.say('Happy to report!');
-        convo.say('The emojis used today were: *' + emojiResults.join('*, *') + "*.");
+
+        var emojiReport = Array.from(new Set(emojiReact.keys())).join('*, *');
+        convo.say('The emojis used today were: *' + emojiReport + "*.");
+
+        var emojiResult = Array.from(emojiReact);
+        emojiResult.sort(function(a, b) {return b[1] - a[1]});
+
+        var i;
+        for (i = emojiResult.length - 1; i >= 0; i -= 1) {
+          if (emojiResult[i][1] !== emojiResult[0][1]) {
+            emojiResult.splice(i, 1);
+          }
+        }
+        if (emojiResult.length === 1) {
+          convo.say('The top emoji today was: *' + emojiResult[0][0] + "*.");
+        } else {
+          convo.say('The top emojis today were: *' + emojiResult.join('* and *').replace(/([,]|\d)/gi, '') + "*.");
+        }
+
         convo.ask('Which emoji would you like a top report on?', function(response, convo) {
-          convo.say(response.text);
+          var request = response.text.toLowerCase();
+          if (emojiReport.indexOf(request) === -1) {
+            convo.say('Sorry, I didn\'t understand that. Is that in the emoji list for today? Let\'s try again.');
+            convo.repeat();
+            convo.next();
+          } else {
+            var score, messageText, messageUser;
+            var messages = new Array;
+            emojiVotes.forEach(function(elem, i, arr) {
+              for (var key in elem.reactions) {
+                if (Object.prototype.hasOwnProperty.call(elem.reactions, key)) {
+                  if (request === key) {
+                    messages.push([elem, elem.reactions[key].score]);
+                  }
+                }
+              }
+            });
+            messages.sort(function(a, b) {return b[1] - a[1]});
+            convo.say('The top ' + request + '\'d message today was: ' + messages[0][0].text + ' by <@' + messages[0][0].user + '>.');
+          }
           convo.next();
         }
         //   [
