@@ -110,7 +110,7 @@ function startBot() {
 
       bot.startConversation(message, function(err, convo) {
         convo.say('Happy to report!');
-        convo.say('The emojis used today were: *' + emojiResults.toString().replace(/([,]\d|[,])/gi, '*, *') + "*.");
+        convo.say('The emojis used today were: *' + emojiResults.join('*, *') + "*.");
         convo.ask('Which emoji would you like a top report on?', function(response, convo) {
           convo.say(response.text);
           convo.next();
