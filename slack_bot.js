@@ -95,7 +95,6 @@ function startBot() {
         }
       });
 
-
       bot.startConversation(message, function(err, convo) {
 
         convo.say('Happy to report!');
